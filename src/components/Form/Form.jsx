@@ -1,6 +1,10 @@
 import React, { useState } from 'react';
+import { addItem } from '../../actions/listAction';
+import { useDispatch } from 'react-redux';
 
 export default function Form(props) {
+	const dispatch = useDispatch();
+
 	const [item, setItem] = useState('');
 
 	function handleChange(event) {
@@ -9,13 +13,13 @@ export default function Form(props) {
 		setItem(text);
 	}
 
-	function addItem(event) {
+	function addItems(event) {
 		event.preventDefault();
 
 		if (item) {
-			// setItems([...items, item]);
-			props.onAddItem(item);
+			dispatch(addItem(item));
 			setItem('');
+			props.onModalHide();
 		} else {
 			alert('Please insert a new item');
 		}
@@ -25,7 +29,7 @@ export default function Form(props) {
 		<>
 			<form className='form'>
 				<input type='text' onChange={handleChange} value={item} />
-				<button onClick={addItem}>ADICIONAR</button>
+				<button onClick={addItems}>ADICIONAR</button>
 			</form>
 		</>
 	);

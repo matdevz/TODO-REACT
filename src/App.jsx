@@ -1,75 +1,57 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
+import { createStore } from 'redux';
+import { Provider } from 'react-redux';
 import './App.css';
 
-import Item from './components/Item/Item';
 import List from './components/List/List';
 import Form from './components/Form/Form';
 import Modal from './components/Modal/Modal';
+import { listReducer } from './reducers/listReducer';
 
-const SAVED_ITEMS = 'savedItems';
+const SALVED_ITEMS = 'savedItems';
+
+function persistState(state) {
+	localStorage.setItem(SALVED_ITEMS, JSON.stringify(state));
+}
+function loadState() {
+	const actualState = localStorage.getItem(SALVED_ITEMS);
+
+	if (actualState) return JSON.parse(actualState);
+	if (!actualState) return [];
+}
+
+const store = createStore(listReducer, loadState());
+store.subscribe(() => persistState(store.getState()));
 
 export default function App() {
-	const [items, setItems] = useState(
-		() => JSON.parse(localStorage.getItem(SAVED_ITEMS)) || []
-	);
-
 	const [onShowModal, setOnShowModal] = useState(false);
 
-	useEffect(() => {
-		localStorage.setItem(SAVED_ITEMS, JSON.stringify(items));
-	}, [items]);
-	function onAddItem(text) {
-		let item = new Item(text);
-		setItems([...items, item]);
-		onModalHide();
-	}
-
-	function onItemDeleted(item) {
-		let filteredItems = items.filter((itemList) => itemList.id !== item.id);
-
-		setItems(filteredItems);
-	}
-
-	function onDone(item) {
-		let updatedItems = items.map((itemList) => {
-			if (itemList.id === item.id) {
-				itemList.done = !itemList.done;
-			}
-
-			return itemList;
-		});
-
-		setItems(updatedItems);
-	}
 	function onModalHide() {
 		setOnShowModal(false);
 	}
 
 	return (
 		<>
-			<div className='container'>
-				<header className='header'>
-					<h1 className='title'>Todo React</h1>
-					<button
-						className='addBtn'
-						onClick={() => {
-							setOnShowModal(true);
-						}}
-					>
-						+
-					</button>
-				</header>
-				{/* <Form onAddItem={onAddItem} /> */}
-				<List
-					onDone={onDone}
-					onItemDeleted={onItemDeleted}
-					items={items}
-				/>
+			<Provider store={store}>
+				<div className='container'>
+					<header className='header'>
+						<h1 className='title'>Todo React</h1>
+						<button
+							className='addBtn'
+							onClick={() => {
+								setOnShowModal(true);
+							}}
+						>
+							+
+						</button>
+					</header>
+					<List />
 
-				<Modal onShowModal={onShowModal} onModalHide={onModalHide}>
-					<Form onAddItem={onAddItem} />
-				</Modal>
-			</div>
+					<Modal onShowModal={onShowModal} onModalHide={onModalHide}>
+						<Form onModalHide={onModalHide} />
+					</Modal>
+				</div>
+			</Provider>
 		</>
 	);
 }
